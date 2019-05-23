@@ -1,5 +1,6 @@
 const Event = require('../../models/event');
 const User = require('../../models/user');
+const Booking = require('../../models/booking');
 const bcrypt = require('bcryptjs');
 
 
@@ -16,26 +17,47 @@ const getUser = userId =>{
     });
 };
 
-const getEvents = eventids =>{
-    return Event.find({_id:{$in:eventids}})
-    .then(events =>{
-        return events.map(event=>{
+
+/* syntax 
+const fnName = arg =>{
+    try{
+        const fncall = wait fun2(2);
+    }
+    catch(err){
+        throw error
+    }
+}
+*/
+
+const getEvents = async eventids =>{
+    try{
+     const events = await Event.find({_id:{$in:eventids}});
+         events.map(event=>{
             return {
                 ...event._doc,
                 date: new Date(event._doc.date).toISOString(),
                 creator: getUser.bind(this,event.creator)
             }
-        })
-    })
-    .catch(err =>{
+        });
+        return events;
+    }
+    catch(err) {
         throw err;
-    });
+    }
 }
-
+const getSingleEvent = eventid =>{
+    return Event.findById(eventid).then(event=>{
+        return {
+            ...event._doc,
+            creator: getUser.bind(this, event._doc.creator)
+        }
+    }).catch(err=>{
+        throw err;
+    })
+};
 
 module.exports = {
     events: () =>{
-        //return events;
         return Event.find()
             .then(events=>{
                 return events.map(event=>{
@@ -48,6 +70,22 @@ module.exports = {
             }).catch(err=>{
                 throw err;
             });
+    },
+    bookings: async () =>{
+        try{
+            const bookings = await Booking.find();
+            return bookings.map(booking=>{
+                return {
+                    ...booking._doc,
+                    user: getUser.bind(this, booking._doc.user),
+                    event: getSingleEvent.bind(this,booking._doc.event),
+                    createdAt: new Date(booking._doc.createdAt).toISOString(),
+                    updatedAt: new Date(booking._doc.updatedAt).toISOString()
+                }
+            })
+        }catch(err){
+            throw err
+        }
     },
     createEvent : (args) =>{
         const event = new Event({
@@ -103,5 +141,49 @@ module.exports = {
         .catch(err => {
             throw err;
         });                    
+    },
+    createBooking : args =>{
+        return Event.findOne({_id:args.eventId})
+        .then(fetchedEvent =>{
+            if(!fetchedEvent){
+                throw new Error ('Event not found.')
+            }
+            const booking = new Booking ({
+                user: '5ce5ef8b777a8d45cddf97a5',
+                event: fetchedEvent
+            })
+            return booking.save()
+        })
+        .then( result =>{
+            return {
+                ...result._doc,
+                user: getUser.bind(this, result._doc.user),
+                event: getSingleEvent.bind(this,result._doc.event),
+                createdAt: new Date(result._doc.createdAt).toISOString(),
+                updatedAt: new Date(result._doc.updatedAt).toISOString()                
+            }
+        })
+        .catch(err =>{
+            throw err;
+        });
+
+    },
+    cancelBooking : args =>{
+        let event;
+        return Booking.findById(args.bookingId).populate('event')
+        .then( fetchedBooking =>{
+             event ={
+                ...fetchedBooking.event._doc,
+                creator: getUser.bind (this, fetchedBooking.event._doc.creator)
+            }
+            return Booking.deleteOne({_id: args.bookingId})
+        })
+        .then( result =>{
+            console.log (result);
+            return event;
+        })            
+        .catch(err =>{
+            throw err;
+        })
     }
 }
