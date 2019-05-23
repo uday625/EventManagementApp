@@ -2,6 +2,7 @@ const Event = require('../../models/event');
 const User = require('../../models/user');
 const Booking = require('../../models/booking');
 const bcrypt = require('bcryptjs');
+const { dateToString } = require('../../helpers/date');
 
 
 const getUser = userId =>{
@@ -16,26 +17,13 @@ const getUser = userId =>{
         throw err;
     });
 };
-
-
-/* syntax 
-const fnName = arg =>{
-    try{
-        const fncall = wait fun2(2);
-    }
-    catch(err){
-        throw error
-    }
-}
-*/
-
 const getEvents = async eventids =>{
     try{
      const events = await Event.find({_id:{$in:eventids}});
          events.map(event=>{
             return {
                 ...event._doc,
-                date: new Date(event._doc.date).toISOString(),
+                date: dateToString(event._doc.date),
                 creator: getUser.bind(this,event.creator)
             }
         });
@@ -63,7 +51,7 @@ module.exports = {
                 return events.map(event=>{
                     return({
                         ...event._doc, 
-                        date: new Date(event._doc.date).toISOString(),
+                        date: dateToString(event._doc.date),
                         creator: getUser.bind(this, event._doc.creator)
                     });
                 });
@@ -79,8 +67,8 @@ module.exports = {
                     ...booking._doc,
                     user: getUser.bind(this, booking._doc.user),
                     event: getSingleEvent.bind(this,booking._doc.event),
-                    createdAt: new Date(booking._doc.createdAt).toISOString(),
-                    updatedAt: new Date(booking._doc.updatedAt).toISOString()
+                    createdAt: dateToString(booking._doc.createdAt),
+                    updatedAt: dateToString(booking._doc.updatedAt)
                 }
             })
         }catch(err){
@@ -100,7 +88,7 @@ module.exports = {
         .then(result=>{
             createdEvent = {
                 ...result._doc,
-                date: new Date(event._doc.date).toISOString(),
+                date: dateToString(event._doc.date),
                 creator: getUser.bind(this,result._doc.creator)
             }
             return User.findById('5ce5ef8b777a8d45cddf97a5')   
@@ -159,8 +147,8 @@ module.exports = {
                 ...result._doc,
                 user: getUser.bind(this, result._doc.user),
                 event: getSingleEvent.bind(this,result._doc.event),
-                createdAt: new Date(result._doc.createdAt).toISOString(),
-                updatedAt: new Date(result._doc.updatedAt).toISOString()                
+                createdAt: dateToString(result._doc.createdAt),
+                updatedAt: dateToString(result._doc.updatedAt)                
             }
         })
         .catch(err =>{

@@ -1,8 +1,6 @@
 const { buildSchema } = require('graphql');
 
 module.exports = buildSchema(`
-
-
     type Event {
         _id : ID!
         title: String!
