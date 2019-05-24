@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 class Events extends Component {
     render() { 
         return ( 
-            <div> Events Page!</div>
+            <h1> This is your event page!</h1>
          );
     }
 }
