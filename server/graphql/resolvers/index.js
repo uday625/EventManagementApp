@@ -3,6 +3,7 @@ const User = require('../../models/user');
 const Booking = require('../../models/booking');
 const bcrypt = require('bcryptjs');
 const { dateToString } = require('../../helpers/date');
+const jwt = require('jsonwebtoken');
 
 
 const getUser = userId =>{
@@ -59,7 +60,10 @@ module.exports = {
                 throw err;
             });
     },
-    bookings: async () =>{
+    bookings: async (args, req) =>{
+        if(!req.isAuth){
+            throw new Error ('Unauthenticated!');
+        }
         try{
             const bookings = await Booking.find();
             return bookings.map(booking=>{
@@ -75,13 +79,16 @@ module.exports = {
             throw err
         }
     },
-    createEvent : (args) =>{
+    createEvent : (args,req) =>{
+        if(!req.isAuth){
+            throw new Error ('Unauthenticated!');
+        }
         const event = new Event({
             title: args.eventInput.title,
             description: args.eventInput.description,
             price: +args.eventInput.price,
             date: new Date(args.eventInput.date),
-            creator: '5ce5ef8b777a8d45cddf97a5'
+            creator: req.userId //'5ce5ef8b777a8d45cddf97a5'
         })
         let createdEvent;
         return event.save()
@@ -91,7 +98,7 @@ module.exports = {
                 date: dateToString(event._doc.date),
                 creator: getUser.bind(this,result._doc.creator)
             }
-            return User.findById('5ce5ef8b777a8d45cddf97a5')   
+            return User.findById(req.userId) //'5ce5ef8b777a8d45cddf97a5'
         })
         .then(user =>{
             if(!user){
@@ -107,6 +114,33 @@ module.exports = {
             console.log(err);
             throw err;
         });
+    },
+    //instead of args, we can use object destructuring 
+    //if we are sure about the parameter name
+    login : ({email,password}) =>{
+        let fetchedUser;   // to make the user accessible in the promise chain
+        return User.findOne({email:email})
+        .then(user=>{
+            if(!user){
+                throw new Error('Email not found');
+            }
+            fetchedUser = user;  // assiged the user so that its accessible below
+            return bcrypt.compare(password,fetchedUser.password)
+        })
+        .then(isEqual=>{
+            if(!isEqual){
+                throw new Error ('Password is incorrect');
+            }
+            const token= jwt.sign({userId:fetchedUser.id, email:fetchedUser.email},'somesupersecretkey',{expiresIn:'1h'});
+            return{
+                userId : fetchedUser.id ,
+                token : token,
+                tokenExpiration : 1
+            }
+        })
+        .catch(err =>{
+            throw err;
+        })
     },
     createUser: args =>{
         return User.findOne({email:args.userInput.email})
@@ -130,14 +164,17 @@ module.exports = {
             throw err;
         });                    
     },
-    createBooking : args =>{
+    createBooking : (args,req) =>{
+        if(!req.isAuth){
+            throw new Error ('Unauthenticated!');
+        }
         return Event.findOne({_id:args.eventId})
         .then(fetchedEvent =>{
             if(!fetchedEvent){
                 throw new Error ('Event not found.')
             }
             const booking = new Booking ({
-                user: '5ce5ef8b777a8d45cddf97a5',
+                user: req.userId, //'5ce5ef8b777a8d45cddf97a5',
                 event: fetchedEvent
             })
             return booking.save()
@@ -156,7 +193,10 @@ module.exports = {
         });
 
     },
-    cancelBooking : args =>{
+    cancelBooking : (args,req) =>{
+        if(!req.isAuth){
+            throw new Error ('Unauthenticated!');
+        }
         let event;
         return Booking.findById(args.bookingId).populate('event')
         .then( fetchedBooking =>{
