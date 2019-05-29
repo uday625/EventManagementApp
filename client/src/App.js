@@ -5,7 +5,7 @@ import { ApolloProvider} from 'react-apollo';
 
 import AuthPage from './pages/Auth/Auth';
 import BookingsPage from './pages/Bookings';
-import EventsPage from './pages/Events';
+import EventsPage from './pages/Events/Events';
 import MainNavigation from './components/Navigation/MainNavigation';
 
 import AuthContext from './context/auth-context';
@@ -47,12 +47,13 @@ class App extends Component {
                 <MainNavigation/>
                 <main className="main-content">
                   <Switch>
-                    {!this.state.token && <Redirect from="/"  to="/auth" exact></Redirect>}
                     {this.state.token && <Redirect from="/"  to="/events" exact></Redirect>}
                     {this.state.token && <Redirect from="/auth"  to="/events" exact></Redirect>}
                     {!this.state.token && <Route path="/auth" component={AuthPage}></Route>}
                     <Route path="/events" component={EventsPage}></Route>
                     {this.state.token && <Route path="/bookings" component={BookingsPage}></Route>}
+                    {!this.state.token && <Redirect to="/auth" exact></Redirect>}
+
                   </Switch>
                 </main>
               </AuthContext.Provider>
