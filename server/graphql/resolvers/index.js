@@ -142,6 +142,34 @@ module.exports = {
             throw err;
         })
     },
+
+    signIn : (args)=>{
+        const email= args.email;
+        const password= args.password;
+        let fetchedUser;   // to make the user accessible in the promise chain
+        return User.findOne({email:email})
+        .then(user=>{
+            if(!user){
+                throw new Error('Email not found');
+            }
+            fetchedUser = user;  // assiged the user so that its accessible below
+            return bcrypt.compare(password,fetchedUser.password)
+        })
+        .then(isEqual=>{
+            if(!isEqual){
+                throw new Error ('Password is incorrect');
+            }
+            const token= jwt.sign({userId:fetchedUser.id, email:fetchedUser.email},'somesupersecretkey',{expiresIn:'1h'});
+            return{
+                userId : fetchedUser.id ,
+                token : token,
+                tokenExpiration : 1
+            }
+        })
+        .catch(err =>{
+            throw err;
+        })
+    },
     createUser: args =>{
         return User.findOne({email:args.userInput.email})
         .then(user =>{

@@ -1,12 +1,11 @@
 import React, {Component} from 'react';
 
-
 class Bookings extends Component {
     render() { 
         return ( 
-            <div> Bookings Page!</div>
+            <h1> Bookings Page!</h1>
          );
     }
 }
- 
+
 export default Bookings;
