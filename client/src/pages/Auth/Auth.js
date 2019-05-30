@@ -69,12 +69,12 @@ class Auth extends Component{
         this.setState(prevState=>{
             return({isLogin: !prevState.isLogin})
         })
-        console.log(this.state.isLogin);
+        //console.log(this.state.isLogin);
     }
 
     _confirm= async ({signIn})=>{
-        console.log(`Res`,signIn);
-        console.log(`post`,this.state.isLogin);
+        //console.log(`Res`,signIn);
+        //console.log(`post`,this.state.isLogin);
         if(signIn.token){
             this.context.login(
                 signIn.token,
@@ -114,7 +114,7 @@ class Auth extends Component{
                                                     event.preventDefault();
                                                     mutation()
                                                     .then((data)=>{
-                                                        console.log(data);
+                                                        //console.log(data);
                                                     })
                                                     .catch();
                                                     }}>

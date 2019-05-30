@@ -12,9 +12,14 @@ import AuthContext from './context/auth-context';
 
 import './App.css';
 
-const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql"
-});
+const client = (authToken)=>{
+  return new ApolloClient({
+    uri: "http://localhost:4000/graphql",
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+};
 
 
 class App extends Component {
@@ -34,7 +39,7 @@ class App extends Component {
 
   render(){
     return (
-      <ApolloProvider client ={client}>
+      <ApolloProvider client ={client(this.state.token)}>
         <div>
           <BrowserRouter>
             <React.Fragment>
